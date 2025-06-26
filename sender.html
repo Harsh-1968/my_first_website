@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head><title>Security Cam - Sender</title></head>
+<body>
+  <h2>Camera Stream (Sender)</h2>
+  <video id="local" autoplay muted playsinline></video>
+  <textarea id="offer" placeholder="Copy this offer to viewer"></textarea>
+  <textarea id="answer" placeholder="Paste viewer's answer here"></textarea>
+  <button onclick="acceptAnswer()">Connect</button>
+
+  <script>
+    const video = document.getElementById("local");
+    const offerBox = document.getElementById("offer");
+    const answerBox = document.getElementById("answer");
+
+    const peer = new RTCPeerConnection();
+
+    peer.onicecandidate = e => {
+      if (e.candidate === null) {
+        offerBox.value = JSON.stringify(peer.localDescription);
+      }
+    };
+
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
+      video.srcObject = stream;
+      stream.getTracks().forEach(track => peer.addTrack(track, stream));
+      return peer.createOffer();
+    }).then(offer => peer.setLocalDescription(offer));
+
+    function acceptAnswer() {
+      const answer = JSON.parse(answerBox.value);
+      peer.setRemoteDescription(answer);
+    }
+  </script>
+</body>
+</html>
